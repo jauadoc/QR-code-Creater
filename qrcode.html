@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta http-equiv="content-type" content="text/html;charset=utf-8">
+	<meta content="always" name="referrer">
+	<meta name="theme-color" content="#2932e1">
+	<title>生成二维码</title>
+	<link rel="stylesheet" type="text/css" href="./basic-sun.css">
+<style>
+	.hidden{visibility: hidden;display: none;}
+	.parent{width: 533px;height: 333px;margin: 0 auto;}
+	.middle{text-align: center;}
+	.notice{color: #3385FF;font-size: 18px;}
+	.error{color: red;}
+</style>
+<script src="./jquery-1.4.4.min.js"></script>
+<script src="./jquery.qrcode.js"></script>
+<script src="./qrcode.js"></script>
+<script type="text/javascript">
+
+//是否开启trim（输入字符串左右去空白）
+// on/off trim function
+var trimMark = true;
+
+$(function(){
+	String.prototype.trim=function(){
+　　    return this.replace(/(^\s*)|(\s*$)/g, "");
+　　}
+
+	$("#trim").click(function(){
+		if(trimMark){
+			$("#trim").html("off");
+			$("#trim").removeClass("sun-button-green");
+			$("#trim").addClass("sun-button-red");
+			trimMark = false;
+		}else{
+			$("#trim").html("on");
+			$("#trim").removeClass("sun-button-red");
+			$("#trim").addClass("sun-button-green");
+			trimMark = true;
+		}
+	})
+
+	$("#createQR").click(function(){
+		//QR code DIV size percent(relatice it's parentNode)
+		//二维码的大小百分比（相对于父元素）
+		var percent = 0.3;
+		//please input notice str.
+		//请输入文本/地址 提示字符串
+		var notice = "please input text/URL  !!!";
+
+		//get text from input and translate to utf-8 for avoid chinese garbled;
+		//获取输入框文本/地址
+		var text = $(".text input[class='sun-input-elegance']").val();
+		if(trimMark){
+			text = text.trim();
+		}
+        text = utf16to8(text);
+        //if input null
+        //如果输入为空
+		if(text == ""){
+			
+			//if input null show notice message
+			//因为输入为空，显示提示消息
+			$("#notice").removeClass("hidden");
+			$("#notice").html(notice);
+		}else{
+			
+			//check text is URL,if it's 'www.xx.xx' add 'http://' on text head;
+			//校验是否是www万维网，如果是加上http自动生成网址
+	        var reg=/^www\..*?\..+?/;     
+	        if(reg.test(text)){    
+	            text = "http://" + text;
+	        } 
+
+	        //clear QR code div
+			//将二维码展示区清空
+			$("#output").html("");
+			//hide notice message div
+			//将提示消息隐藏
+			$("#notice").addClass("hidden");
+			$("#notice").html("");
+
+			//invoke QR js lib to create QR code.
+			//调用QR的js库生成二维码
+			//thanks for zxing to support qr js lib.
+			// he's github >>>      https://github.com/zxing/zxing
+
+			var obj=$('#output');
+			var offset = obj.offset();
+			var width=obj.width()*percent;
+			jQuery('#output').qrcode({width:width,height:width,correctLevel:0,text:text}); 
+		}
+	});
+	$(document).keydown(function(event){
+		//listen enter type
+		//添加回车监听
+		if(event.keyCode == 13){ 
+			$("#createQR").click();
+		}
+	}); 
+});
+
+//translate chinese utf-16 to utf-8
+//将中文转换成utf-8字符串
+function utf16to8(str) {
+	var out, i, len, c;
+	out = "";
+	len = str.length;
+	for (i = 0; i < len; i++) {
+		c = str.charCodeAt(i);
+		if ((c >= 0x0001) && (c <= 0x007F)) {
+			out += str.charAt(i);
+		} else if (c > 0x07FF) {
+			out += String.fromCharCode(0xE0 | ((c >> 12) & 0x0F));
+			out += String.fromCharCode(0x80 | ((c >> 6) & 0x3F));
+			out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
+		} else {
+			out += String.fromCharCode(0xC0 | ((c >> 6) & 0x1F));
+			out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
+		}
+	}
+	return out;
+}	
+
+
+</script>
+</head>
+<body>
+	<div class="parent">
+		<!-- 输入框区 -->
+		<!-- input text DIV -->
+		<br>
+		<div class="text middle">
+			<span class="notice">Text/URL：</span>
+			<input class="sun-input-elegance" type="text"></input>
+			<div id="createQR" class="sun-button-blue">Create QR</div>
+			trim:<span id="trim" class="sun-button-green">on</span>
+			<div id="notice" class="sun-border-elegance hidden notice error"></div>
+		</div>
+		<br>
+		<hr>
+		<br>
+		<!-- 二维码生成区 -->
+		<!-- QR code DIV -->
+		<div class="qrcode middle">
+			<div id="output"></div>
+		</div>
+	</div>
+</body>
+</html>
